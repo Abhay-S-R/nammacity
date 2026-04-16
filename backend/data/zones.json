@@ -1,0 +1,180 @@
+{
+  "zones": [
+    {
+      "id": "silk-board",
+      "name": "Silk Board Junction",
+      "center": [12.9170, 77.6230],
+      "type": "traffic-hotspot",
+      "base_traffic_load": 9,
+      "base_pollution": 6,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-madiwala"],
+      "description": "Major interchange connecting ORR, Hosur Road, and BTM Layout. India's most infamous traffic junction."
+    },
+    {
+      "id": "hebbal",
+      "name": "Hebbal Flyover",
+      "center": [13.0358, 77.5970],
+      "type": "traffic-hotspot",
+      "base_traffic_load": 8,
+      "base_pollution": 5,
+      "base_infra_stress": 6,
+      "nearby_stations": ["btp-hebbal"],
+      "description": "North Bengaluru bottleneck connecting NH44 to the city. Chronic congestion during peak hours."
+    },
+    {
+      "id": "whitefield",
+      "name": "Whitefield",
+      "center": [12.9698, 77.7500],
+      "type": "it-corridor",
+      "base_traffic_load": 7,
+      "base_pollution": 5,
+      "base_infra_stress": 4,
+      "nearby_stations": ["btp-whitefield"],
+      "description": "Major IT corridor with ITPL and numerous tech parks. Peak-hour overload from office commuters."
+    },
+    {
+      "id": "electronic-city",
+      "name": "Electronic City",
+      "center": [12.8440, 77.6600],
+      "type": "it-corridor",
+      "base_traffic_load": 7,
+      "base_pollution": 4,
+      "base_infra_stress": 4,
+      "nearby_stations": ["btp-ecity"],
+      "description": "Southern tech hub housing Infosys, Wipro, and TCS campuses. Elevated expressway helps but entry/exit points congest."
+    },
+    {
+      "id": "kr-puram",
+      "name": "KR Puram",
+      "center": [13.0010, 77.6960],
+      "type": "traffic-pollution",
+      "base_traffic_load": 8,
+      "base_pollution": 7,
+      "base_infra_stress": 6,
+      "nearby_stations": ["btp-krpuram"],
+      "description": "Railway junction and industrial area. Heavy vehicle traffic and pollution from Old Madras Road corridor."
+    },
+    {
+      "id": "peenya",
+      "name": "Peenya Industrial Area",
+      "center": [13.0300, 77.5200],
+      "type": "industrial",
+      "base_traffic_load": 5,
+      "base_pollution": 8,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-peenya"],
+      "description": "Bengaluru's largest industrial belt. High pollution from manufacturing units. Heavy goods vehicle traffic."
+    },
+    {
+      "id": "majestic",
+      "name": "Majestic / Kempegowda",
+      "center": [12.9772, 77.5713],
+      "type": "transit-hub",
+      "base_traffic_load": 8,
+      "base_pollution": 6,
+      "base_infra_stress": 7,
+      "nearby_stations": ["btp-majestic"],
+      "description": "Central bus terminal and metro interchange. Highest footfall transit hub in Bengaluru."
+    },
+    {
+      "id": "koramangala",
+      "name": "Koramangala",
+      "center": [12.9352, 77.6245],
+      "type": "mixed",
+      "base_traffic_load": 7,
+      "base_pollution": 5,
+      "base_infra_stress": 4,
+      "nearby_stations": ["btp-madiwala"],
+      "description": "Startup hub with dense commercial and residential mix. Weekend nightlife causes congestion spikes."
+    },
+    {
+      "id": "indiranagar",
+      "name": "Indiranagar",
+      "center": [12.9784, 77.6408],
+      "type": "commercial",
+      "base_traffic_load": 6,
+      "base_pollution": 4,
+      "base_infra_stress": 4,
+      "nearby_stations": ["btp-indiranagar"],
+      "description": "Upscale commercial district. 100 Feet Road and 12th Main are perennially congested. Nightlife hotspot."
+    },
+    {
+      "id": "mg-road",
+      "name": "MG Road / Brigade Road",
+      "center": [12.9756, 77.6066],
+      "type": "commercial",
+      "base_traffic_load": 7,
+      "base_pollution": 5,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-central"],
+      "description": "Central business district and shopping area. Event-heavy zone near Chinnaswamy Stadium."
+    },
+    {
+      "id": "bannerghatta",
+      "name": "Bannerghatta Road",
+      "center": [12.8900, 77.5960],
+      "type": "traffic-corridor",
+      "base_traffic_load": 8,
+      "base_pollution": 5,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-jpnagar"],
+      "description": "Single arterial road with no viable alternatives. Connects southern residential areas to the city center."
+    },
+    {
+      "id": "marathahalli",
+      "name": "Marathahalli / ORR",
+      "center": [12.9591, 77.6974],
+      "type": "traffic-hotspot",
+      "base_traffic_load": 9,
+      "base_pollution": 6,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-marathahalli"],
+      "description": "Outer Ring Road's worst stretch. Confluence of IT traffic, residential areas, and the ORR flyover."
+    },
+    {
+      "id": "yelahanka",
+      "name": "Yelahanka",
+      "center": [13.1007, 77.5963],
+      "type": "residential",
+      "base_traffic_load": 5,
+      "base_pollution": 4,
+      "base_infra_stress": 4,
+      "nearby_stations": ["btp-yelahanka"],
+      "description": "Emerging residential area near Air Force Station. Rapid growth causing infrastructure strain."
+    },
+    {
+      "id": "jayanagar",
+      "name": "Jayanagar",
+      "center": [12.9308, 77.5838],
+      "type": "residential",
+      "base_traffic_load": 6,
+      "base_pollution": 4,
+      "base_infra_stress": 3,
+      "nearby_stations": ["btp-jpnagar"],
+      "description": "Well-planned residential area with school-zone traffic. 4th Block commercial area sees weekend rush."
+    },
+    {
+      "id": "bellandur",
+      "name": "Bellandur",
+      "center": [12.9260, 77.6762],
+      "type": "it-residential",
+      "base_traffic_load": 8,
+      "base_pollution": 7,
+      "base_infra_stress": 6,
+      "nearby_stations": ["btp-marathahalli"],
+      "description": "IT corridor adjacent to the infamous Bellandur Lake. Flooding risk combined with ORR traffic bottleneck."
+    },
+    {
+      "id": "yeshwanthpur",
+      "name": "Yeshwanthpur",
+      "center": [13.0220, 77.5510],
+      "type": "industrial-transit",
+      "base_traffic_load": 6,
+      "base_pollution": 6,
+      "base_infra_stress": 5,
+      "nearby_stations": ["btp-yeshwanthpur"],
+      "description": "Railway junction with industrial and wholesale market areas. APMC yard causes heavy goods vehicle traffic."
+    }
+  ]
+}

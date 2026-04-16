@@ -1,0 +1,86 @@
+{
+  "events": [
+    {
+      "id": "morning-peak",
+      "name": "Morning Rush Hour",
+      "affected_zones": ["ALL"],
+      "congestion_impact": 0,
+      "pollution_impact": 0,
+      "infra_stress_impact": 0,
+      "start_hour": 8,
+      "end_hour": 10,
+      "is_default": true
+    },
+    {
+      "id": "evening-peak",
+      "name": "Evening Rush Hour",
+      "affected_zones": ["ALL"],
+      "congestion_impact": 0,
+      "pollution_impact": 0,
+      "infra_stress_impact": 0,
+      "start_hour": 17,
+      "end_hour": 20,
+      "is_default": true
+    },
+    {
+      "id": "ipl-chinnaswamy",
+      "name": "IPL Match at Chinnaswamy Stadium",
+      "affected_zones": ["mg-road", "indiranagar", "koramangala", "majestic"],
+      "congestion_impact": 3,
+      "pollution_impact": 1,
+      "infra_stress_impact": 2,
+      "start_hour": 16,
+      "end_hour": 23
+    },
+    {
+      "id": "heavy-rain",
+      "name": "Heavy Monsoon Rain",
+      "affected_zones": ["ALL"],
+      "congestion_impact": 2,
+      "pollution_impact": -1,
+      "infra_stress_impact": 3,
+      "start_hour": 0,
+      "end_hour": 24
+    },
+    {
+      "id": "school-hours",
+      "name": "School Rush Hour",
+      "affected_zones": ["koramangala", "jayanagar", "whitefield", "indiranagar", "yelahanka"],
+      "congestion_impact": 2,
+      "pollution_impact": 1,
+      "infra_stress_impact": 0,
+      "start_hour": 7,
+      "end_hour": 9
+    },
+    {
+      "id": "construction-orr",
+      "name": "ORR Metro Construction",
+      "affected_zones": ["marathahalli", "bellandur", "whitefield", "silk-board"],
+      "congestion_impact": 2,
+      "pollution_impact": 2,
+      "infra_stress_impact": 1,
+      "start_hour": 0,
+      "end_hour": 24
+    },
+    {
+      "id": "weekend-market",
+      "name": "Weekend Market Rush",
+      "affected_zones": ["jayanagar", "koramangala", "indiranagar", "mg-road"],
+      "congestion_impact": 2,
+      "pollution_impact": 1,
+      "infra_stress_impact": 1,
+      "start_hour": 10,
+      "end_hour": 21
+    },
+    {
+      "id": "industrial-shift",
+      "name": "Industrial Shift Change",
+      "affected_zones": ["peenya", "yeshwanthpur"],
+      "congestion_impact": 2,
+      "pollution_impact": 2,
+      "infra_stress_impact": 0,
+      "start_hour": 6,
+      "end_hour": 8
+    }
+  ]
+}
