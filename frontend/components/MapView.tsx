@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import Map, { NavigationControl } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import DeckGL from "@deck.gl/react";
 import { HexagonLayer } from "@deck.gl/aggregation-layers";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { Zone, HexPoint } from "../lib/types";
 
 // Free dark basemap — no API key needed
@@ -38,6 +38,29 @@ export default function MapView({
   selectedZoneId,
   activeLayer = "composite",
 }: MapViewProps) {
+
+  // Helper: find the nearest zone to a clicked [lng, lat] coordinate
+  const findNearestZone = useCallback(
+    (lng: number, lat: number): Zone | null => {
+      if (!zones.length) return null;
+      let nearest: Zone | null = null;
+      let minDist = Infinity;
+      for (const z of zones) {
+        // zone.center is [lat, lng], click gives [lng, lat]
+        const dlat = z.center[0] - lat;
+        const dlng = z.center[1] - lng;
+        const dist = dlat * dlat + dlng * dlng;
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = z;
+        }
+      }
+      // Only match if within ~3km radius (~0.03 degrees)
+      if (minDist > 0.03 * 0.03) return null;
+      return nearest;
+    },
+    [zones]
+  );
 
   // Generate hexagon data points from zone scores
   const hexData = useMemo(() => {
@@ -78,6 +101,7 @@ export default function MapView({
       extruded: true,
       radius: 600,
       elevationScale: 4,
+      gpuAggregation: false, // CRITICAL: CPU mode so points are available on click
       getPosition: (d) => d.position,
       getElevationWeight: (d) => d.weight,
       elevationAggregation: "SUM",
@@ -92,39 +116,56 @@ export default function MapView({
         getColorWeight: 600,
       },
       onClick: (info) => {
-        if (info.object && info.object.points && info.object.points.length > 0) {
-          const point = info.object.points[0].source as HexPoint;
-          if (point && point.zone) {
-            onZoneClick(point.zone);
+        if (info.object) {
+          // CPU aggregation mode: info.object.points is an array of { source, index }
+          const points = info.object.points;
+          if (points && points.length > 0) {
+            const firstPoint = points[0];
+            // Try .source (deck.gl CPU aggregation standard), then direct access
+            const hexPoint: HexPoint | undefined =
+              (firstPoint as any).source ?? (firstPoint as any);
+            if (hexPoint && hexPoint.zone) {
+              onZoneClick(hexPoint.zone);
+              return true;
+            }
+          }
+
+          // Fallback: use the click coordinate to find nearest zone
+          if (info.coordinate) {
+            const nearest = findNearestZone(info.coordinate[0], info.coordinate[1]);
+            if (nearest) {
+              onZoneClick(nearest);
+              return true;
+            }
           }
         }
         return true;
       },
     }),
 
-    // Zone center markers (clickable, subtle)
+    // Zone center markers (clickable, clearly visible)
     new ScatterplotLayer<Zone>({
       id: "zone-markers-layer",
       data: zones,
       pickable: true,
-      opacity: 0.85,
+      opacity: 0.9,
       stroked: true,
       filled: true,
-      radiusScale: 120,
-      radiusMinPixels: 3,
-      radiusMaxPixels: 10,
-      lineWidthMinPixels: 1,
+      radiusScale: 1,
+      radiusMinPixels: 6,
+      radiusMaxPixels: 14,
+      lineWidthMinPixels: 2,
       getPosition: (d) => [d.center[1], d.center[0]],
       getFillColor: (d) =>
         d.id === selectedZoneId
-          ? [59, 130, 246, 200]   // Blue highlight
-          : [255, 255, 255, 0],   // Invisible fill
+          ? [59, 130, 246, 220]   // Blue highlight
+          : [255, 255, 255, 60],  // Subtle white dot
       getLineColor: (d) =>
         d.id === selectedZoneId
           ? [147, 197, 253, 255]  // Bright blue ring
-          : [148, 163, 184, 40],  // Very faint slate
+          : [148, 163, 184, 100], // Visible slate ring
       getRadius: (d) =>
-        d.id === selectedZoneId ? 8 : 5,
+        d.id === selectedZoneId ? 500 : 350,
       onClick: (info) => {
         if (info.object) {
           onZoneClick(info.object);
@@ -138,6 +179,32 @@ export default function MapView({
       },
     }),
 
+    // Zone name labels
+    new TextLayer<Zone>({
+      id: "zone-labels-layer",
+      data: zones,
+      pickable: true,
+      getPosition: (d) => [d.center[1], d.center[0]],
+      getText: (d) => d.name,
+      getSize: 13,
+      getColor: [220, 220, 230, 200],
+      getTextAnchor: "middle" as const,
+      getAlignmentBaseline: "top" as const,
+      getPixelOffset: [0, 14],
+      fontFamily: "Inter, system-ui, sans-serif",
+      fontWeight: 600,
+      outlineWidth: 3,
+      outlineColor: [10, 14, 23, 220],
+      billboard: true,
+      sizeUnits: "pixels" as const,
+      onClick: (info) => {
+        if (info.object) {
+          onZoneClick(info.object);
+        }
+        return true;
+      },
+    }),
+
     // Pulsing outer ring for selected zone
     ...(selectedZoneId
       ? [
@@ -148,17 +215,31 @@ export default function MapView({
             opacity: 0.4,
             stroked: true,
             filled: false,
-            radiusScale: 200,
-            radiusMinPixels: 8,
-            radiusMaxPixels: 20,
+            radiusScale: 1,
+            radiusMinPixels: 12,
+            radiusMaxPixels: 28,
             lineWidthMinPixels: 2,
             getPosition: (d) => [d.center[1], d.center[0]],
             getLineColor: [59, 130, 246, 120],
-            getRadius: 10,
+            getRadius: 700,
           }),
         ]
       : []),
   ];
+
+  // Fallback: clicking anywhere on the deck (map background) tries to find nearest zone
+  const handleDeckClick = useCallback(
+    (info: any) => {
+      // Only fires if no layer handled the click
+      if (!info.layer && info.coordinate) {
+        const nearest = findNearestZone(info.coordinate[0], info.coordinate[1]);
+        if (nearest) {
+          onZoneClick(nearest);
+        }
+      }
+    },
+    [findNearestZone, onZoneClick]
+  );
 
   return (
     <div className="absolute inset-0 z-0">
@@ -172,6 +253,7 @@ export default function MapView({
         }}
         controller={true}
         layers={layers}
+        onClick={handleDeckClick}
         getCursor={({ isDragging, isHovering }) =>
           isDragging ? "grabbing" : isHovering ? "pointer" : "crosshair"
         }
