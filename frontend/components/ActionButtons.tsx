@@ -5,6 +5,7 @@ import { Zone } from "../lib/types";
 import { dispatchAlert } from "../lib/api";
 import { FileText, ArrowRightLeft, Radio, Loader2, Flag } from "lucide-react";
 import { toast } from "sonner";
+import ReportModal from "./ReportModal";
 
 type ActionButtonsProps = {
   zone: Zone;
@@ -13,6 +14,7 @@ type ActionButtonsProps = {
 
 export default function ActionButtons({ zone, onReportIssue }: ActionButtonsProps) {
   const [isDispatching, setIsDispatching] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const handleDispatch = async () => {
     setIsDispatching(true);
@@ -36,21 +38,12 @@ export default function ActionButtons({ zone, onReportIssue }: ActionButtonsProp
       });
     } catch (err) {
       console.error(err);
-      // Fallback toast if backend is down
       toast.success(`Alert dispatched to ${zone.nearby_stations[0] || "nearest station"}`, {
         description: "Demo mode — backend may not be running",
       });
     } finally {
       setIsDispatching(false);
     }
-  };
-
-  const handleReport = () => {
-    toast.promise(new Promise((resolve) => setTimeout(resolve, 1500)), {
-      loading: "Generating formal incident report...",
-      success: "Incident Report generated and saved to central database.",
-      error: "Error generating report",
-    });
   };
 
   const handleReroute = () => {
@@ -80,7 +73,7 @@ export default function ActionButtons({ zone, onReportIssue }: ActionButtonsProp
 
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={handleReport}
+            onClick={() => setShowReport(true)}
             className="flex items-center justify-center gap-2 p-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-medium transition-colors"
           >
             <FileText className="w-4 h-4" />
@@ -106,6 +99,13 @@ export default function ActionButtons({ zone, onReportIssue }: ActionButtonsProp
           </button>
         )}
       </div>
+
+      {/* Comprehensive Incident Report Modal */}
+      <ReportModal
+        zone={zone}
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+      />
     </div>
   );
 }
