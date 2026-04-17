@@ -140,8 +140,15 @@ export default function Home() {
           {/* Layer Toggle */}
           <LayerToggle activeLayer={activeLayer} onChange={setActiveLayer} />
 
-          {/* Scenario Dropdown */}
-          <ScenarioDropdown onScenariosApplied={handleScenariosApplied} />
+          {/* Scenario Dropdown + Status Feed — left-aligned below DashboardHeader */}
+          <div className="absolute top-[156px] left-4 z-20 pointer-events-auto flex items-center gap-2">
+            <ScenarioDropdown onScenariosApplied={handleScenariosApplied} />
+            <AlertFeed
+              zones={zones}
+              isOpen={showAlertFeed}
+              onToggle={() => setShowAlertFeed(!showAlertFeed)}
+            />
+          </div>
 
           {/* Time Slider */}
           <TimeSlider offset={timeOffset} onChange={setTimeOffset} />
@@ -155,12 +162,7 @@ export default function Home() {
             />
           )}
 
-          {/* Alert Feed */}
-          <AlertFeed
-            zones={zones}
-            isOpen={showAlertFeed}
-            onToggle={() => setShowAlertFeed(!showAlertFeed)}
-          />
+
 
           {/* Citizen Report Form */}
           <ReportForm

@@ -31,7 +31,7 @@ function generateAlerts(zones: Zone[]): AlertEntry[] {
     zones.forEach((zone, idx) => {
         const score = zone.scores.composite;
         const severity = zone.scores.severity as "critical" | "warning" | "moderate" | "normal";
-        
+
         let message = "";
         if (severity === "critical") message = `${zone.name} crossed critical threshold (score ${score.toFixed(1)})`;
         else if (severity === "warning") message = `${zone.name} entering elevated stress zone`;
@@ -134,8 +134,7 @@ export default function AlertFeed({ zones, isOpen, onToggle }: Props) {
                         : "0 2px 12px rgba(0,0,0,0.4)",
                 }}
             >
-                <span style={{ fontSize: "15px" }}>🔔</span>
-                <span>Alerts</span>
+                <span>Status Feed</span>
                 {criticalCount > 0 && (
                     <span
                         style={{
@@ -165,7 +164,7 @@ export default function AlertFeed({ zones, isOpen, onToggle }: Props) {
                     borderLeft: "1px solid #1e293b",
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
-                    zIndex: 100,
+                    zIndex: 40,
                     display: "flex",
                     flexDirection: "column",
                     transform: isOpen ? "translateX(0)" : "translateX(100%)",
