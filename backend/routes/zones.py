@@ -33,12 +33,14 @@ async def get_all_zones(request: Request):
     
     # Get zone overrides from active scenario
     zone_overrides = None
-    active_events = events  # Default events always active
+    # In normal mode, only apply default/baseline events (morning/evening rush)
+    # Scenario-specific events (like heavy-rain, ipl) are only active when that scenario is selected
+    active_events = [e for e in events if e.get("is_default", False)]
     
     if scenario:
         zone_overrides = scenario.get("zone_overrides")
         weather = scenario.get("weather", weather)
-        # Add scenario-specific events
+        # Replace with scenario-specific events
         scenario_event_ids = scenario.get("active_events", [])
         active_events = [e for e in events if e["id"] in scenario_event_ids]
     
@@ -94,7 +96,7 @@ async def get_zone(zone_id: str, request: Request):
     current_hour = _get_current_hour()
     
     zone_overrides = None
-    active_events = events
+    active_events = [e for e in events if e.get("is_default", False)]
     if scenario:
         zone_overrides = scenario.get("zone_overrides")
         weather = scenario.get("weather", weather)

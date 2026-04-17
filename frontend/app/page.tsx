@@ -6,8 +6,8 @@ import DashboardHeader from "../components/DashboardHeader";
 import TimeSlider from "../components/TimeSlider";
 import ZonePanel from "../components/ZonePanel";
 import ReportForm from "../components/ReportForm";
-import { fetchZonesWithSummary, fetchForecast } from "../lib/api";
-import { Zone, CityStats, statsFromSummary, computeCityStats } from "../lib/types";
+import { fetchZonesWithSummary, fetchForecast, applyScenario } from "../lib/api";
+import { Zone, CityStats, statsFromSummary, ZonesApiResponse } from "../lib/types";
 import { Toaster } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -42,9 +42,13 @@ export default function Home() {
     }
   }, []);
 
-  // Initial load
+  // Initial load — also reset any lingering scenario from a previous session
   useEffect(() => {
-    loadCurrentData().finally(() => setLoading(false));
+    const init = async () => {
+      await applyScenario(null); // ensure backend starts in Normal mode
+      await loadCurrentData();
+    };
+    init().finally(() => setLoading(false));
   }, [loadCurrentData]);
 
   // Refresh on slider change
@@ -93,13 +97,13 @@ export default function Home() {
     setShowReportForm(true);
   };
 
-  // Called by ScenarioDropdown (Dev B) after scenario is applied
-  const handleScenariosApplied = (newZones: Zone[]) => {
-    setZones(newZones);
-    setStats(computeCityStats(newZones));
+  // Called by ScenarioDropdown after scenario is applied
+  const handleScenariosApplied = (data: ZonesApiResponse) => {
+    setZones(data.zones);
+    setStats(statsFromSummary(data.summary));
     // Keep selected zone fresh
     if (selectedZone) {
-      const updated = newZones.find((z) => z.id === selectedZone.id);
+      const updated = data.zones.find((z) => z.id === selectedZone.id);
       if (updated) setSelectedZone(updated);
     }
   };

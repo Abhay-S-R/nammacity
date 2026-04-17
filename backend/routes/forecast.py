@@ -33,7 +33,7 @@ async def get_forecast(
     forecast_hour = (current_hour + offset) % 24
     
     zone_overrides = None
-    active_events = events
+    active_events = [e for e in events if e.get("is_default", False)]
     if scenario:
         zone_overrides = scenario.get("zone_overrides")
         weather = scenario.get("weather", weather)

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { applyScenario, fetchZones } from "../lib/api";
-import type { Zone } from "../lib/types";
+import { applyScenario, fetchZonesWithSummary } from "../lib/api";
+import type { ZonesApiResponse } from "../lib/types";
 
 type Props = {
-    onScenariosApplied: (zones: Zone[]) => void;
+    onScenariosApplied: (data: ZonesApiResponse) => void;
 };
 
 type Scenario = {
@@ -25,39 +25,46 @@ const SCENARIOS: Scenario[] = [
         color: "#22c55e",
     },
     {
-        id: "ipl_chinnaswamy",
+        id: "ipl-match",
         label: "IPL Match at Chinnaswamy",
         icon: "🏏",
         description: "Heavy crowd & traffic near stadium",
         color: "#f97316",
     },
     {
-        id: "heavy_monsoon",
+        id: "monsoon-heavy",
         label: "Heavy Monsoon",
         icon: "🌧️",
         description: "Flooding risk, reduced road capacity",
         color: "#3b82f6",
     },
     {
-        id: "orr_blocked",
+        id: "orr-blocked",
         label: "ORR Blocked",
         icon: "🚧",
         description: "Outer Ring Road major disruption",
         color: "#ef4444",
     },
     {
-        id: "metro_strike",
+        id: "metro-strike",
         label: "Metro Strike",
         icon: "🚇",
         description: "Metro services suspended",
         color: "#eab308",
     },
     {
-        id: "school_holiday",
+        id: "school-holiday",
         label: "School Holiday",
         icon: "🎒",
         description: "Reduced peak-hour congestion",
         color: "#a78bfa",
+    },
+    {
+        id: "rain-plus-ipl",
+        label: "Rain + IPL Double Whammy",
+        icon: "⛈️🏏",
+        description: "Worst-case scenario for central Bengaluru",
+        color: "#dc2626",
     },
 ];
 
@@ -68,13 +75,17 @@ export default function ScenarioDropdown({ onScenariosApplied }: Props) {
 
     const handleSelect = async (scenario: Scenario) => {
         if (loading) return;
+        if (scenario.id === activeScenario.id) {
+            setIsOpen(false);
+            return;
+        }
         setIsOpen(false);
         setActiveScenario(scenario);
         setLoading(true);
         try {
             await applyScenario(scenario.id);
-            const zones = await fetchZones();
-            onScenariosApplied(zones);
+            const data = await fetchZonesWithSummary();
+            onScenariosApplied(data);
         } catch (e) {
             console.error("Failed to apply scenario:", e);
         } finally {

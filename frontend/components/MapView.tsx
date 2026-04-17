@@ -39,21 +39,32 @@ export default function MapView({
   activeLayer = "composite",
 }: MapViewProps) {
 
+  // Seeded pseudo-random for deterministic scatter (same zone = same points every render)
+  function seededRandom(seed: number): number {
+    const x = Math.sin(seed * 9301 + 49297) * 49297;
+    return x - Math.floor(x);
+  }
+
   // Generate hexagon data points from zone scores
   const hexData = useMemo(() => {
     const points: HexPoint[] = [];
-    zones.forEach((zone) => {
+    zones.forEach((zone, zoneIdx) => {
       const score = Math.max(
         0.5,
         (zone.scores[activeLayer as keyof typeof zone.scores] as number) || 0
       );
 
+      // Green/normal zones (score < 3.5) get 0 height — they should be flat
+      // Only moderate+ zones get elevation
+      const elevationWeight = score < 3.5 ? 0 : score;
+
       // Fixed point count per zone — score drives weight, not density
       const count = 5;
       for (let i = 0; i < count; i++) {
-        // Box-Muller Gaussian jitter for organic heat-blob shape
-        const u1 = Math.random();
-        const u2 = Math.random();
+        // Deterministic seed from zone index + point index
+        const seed = zoneIdx * 100 + i;
+        const u1 = Math.max(0.001, seededRandom(seed));
+        const u2 = seededRandom(seed + 50);
         const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
         const z1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
 
@@ -61,7 +72,7 @@ export default function MapView({
         const spread = 0.01;
         points.push({
           position: [zone.center[1] + z0 * spread, zone.center[0] + z1 * spread],
-          weight: Math.min(score, 10),
+          weight: elevationWeight,
           zone: zone,
         });
       }
@@ -77,10 +88,10 @@ export default function MapView({
       pickable: true,
       extruded: true,
       radius: 600,
-      elevationScale: 4,
+      elevationScale: 6,
       getPosition: (d) => d.position,
       getElevationWeight: (d) => d.weight,
-      elevationAggregation: "SUM",
+      elevationAggregation: "MEAN",
       getColorWeight: (d) => d.weight,
       colorAggregation: "MEAN",
       colorRange: SEVERITY_COLOR_RANGE,
