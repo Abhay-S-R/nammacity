@@ -79,9 +79,16 @@ async def analyze_zone(body: AnalyzeRequest, request: Request):
             alerts=state.get("alerts", []),
         )
         return result
-    except Exception as e:
+    except BaseException as e:
         # Fallback to rule-based analysis
+        import traceback
         print(f"[Agent] Gemini/MCP unavailable, using fallback: {e}")
+        traceback.print_exc()
+        # Unwrap ExceptionGroup to show root cause
+        if hasattr(e, 'exceptions'):
+            for sub_exc in e.exceptions:
+                print(f"[Agent] Sub-exception: {sub_exc}")
+                traceback.print_exception(type(sub_exc), sub_exc, sub_exc.__traceback__)
         return _fallback_analysis(zone, scores, weather, stations, active_events, current_hour)
 
 

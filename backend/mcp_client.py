@@ -11,8 +11,8 @@ to call in what order — this is the agentic behavior.
 import os
 import sys
 import json
-import asyncio
-from datetime import datetime
+import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -33,40 +33,6 @@ def _get_gemini_client():
     return genai.Client(api_key=api_key)
 
 
-# --- MCP Connection ---
-
-async def _connect_mcp():
-    """
-    Start the MCP server as a subprocess and connect via stdio.
-    Returns (session, cleanup_fn).
-    """
-    from mcp import ClientSession
-    from mcp.client.stdio import stdio_client, StdioServerParameters
-
-    server_path = str(Path(__file__).parent / "mcp_server" / "server.py")
-
-    server_params = StdioServerParameters(
-        command=sys.executable,
-        args=[server_path],
-    )
-
-    # stdio_client is an async context manager
-    read_stream, write_stream = await stdio_client(server_params).__aenter__()
-    session = ClientSession(read_stream, write_stream)
-    await session.__aenter__()
-    await session.initialize()
-
-    return session
-
-
-async def _close_mcp(session):
-    """Clean up MCP session."""
-    try:
-        await session.__aexit__(None, None, None)
-    except Exception:
-        pass
-
-
 # --- Tool Schema Conversion ---
 
 def _mcp_tools_to_gemini_declarations(mcp_tools: list) -> list:
@@ -84,7 +50,6 @@ def _mcp_tools_to_gemini_declarations(mcp_tools: list) -> list:
 
         for prop_name, prop_schema in schema.get("properties", {}).items():
             prop_type = prop_schema.get("type", "string").upper()
-            # Map JSON schema types to Gemini types
             type_map = {
                 "STRING": "STRING",
                 "INTEGER": "INTEGER",
@@ -149,156 +114,163 @@ async def run_agent_analysis(
 ) -> dict:
     """
     Run the full agentic analysis pipeline:
-    1. Connect to MCP server
+    1. Connect to MCP server via stdio
     2. Discover tools
     3. Send context to Gemini with tool declarations
     4. Handle multi-step tool calling
     5. Return structured analysis result
     """
-    session = None
+    from mcp import ClientSession
+    from mcp.client.stdio import stdio_client, StdioServerParameters
+
+    server_path = str(Path(__file__).parent / "mcp_server" / "server.py")
+    server_params = StdioServerParameters(
+        command=sys.executable,
+        args=[server_path],
+    )
+
     actions_taken = []
 
-    try:
-        # Connect to MCP server
-        session = await _connect_mcp()
+    # Use proper async with blocks — this is critical for anyio task scoping
+    async with stdio_client(server_params) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
 
-        # Discover available tools
-        tools_result = await session.list_tools()
-        mcp_tools = tools_result.tools
+            # Discover available tools
+            tools_result = await session.list_tools()
+            mcp_tools = tools_result.tools
+            print(f"[Agent] Discovered {len(mcp_tools)} MCP tools")
 
-        # Convert to Gemini function declarations
-        gemini_declarations = _mcp_tools_to_gemini_declarations(mcp_tools)
+            # Convert to Gemini function declarations
+            gemini_declarations = _mcp_tools_to_gemini_declarations(mcp_tools)
 
-        # Build the initial prompt with zone context
-        context = (
-            f"Analyze zone '{zone['id']}' ({zone['name']}).\n"
-            f"Zone type: {zone.get('type', 'unknown')}\n"
-            f"Description: {zone.get('description', 'N/A')}\n"
-            f"Current scores: Congestion={scores['congestion']}, "
-            f"Pollution={scores['pollution']}, Infra Stress={scores['infra_stress']}, "
-            f"Composite={scores['composite']} ({scores['severity']})\n"
-            f"Trend: {scores.get('trend', 'stable')}\n"
-            f"Weather: {weather.get('condition', 'Unknown')}, "
-            f"{'RAINING' if weather.get('is_raining') else 'Dry'}, "
-            f"{weather.get('temperature', 28)}°C\n"
-        )
-
-        if query:
-            context += f"\nUser question: {query}\n"
-
-        context += (
-            "\nUse your tools to gather more data, assess the situation, "
-            "and take appropriate actions (like dispatching alerts if needed). "
-            "Then provide your analysis."
-        )
-
-        # Initialize Gemini
-        from google.genai import types
-
-        client = _get_gemini_client()
-
-        gemini_tools = types.Tool(function_declarations=gemini_declarations)
-
-        # Start the conversation
-        messages = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=context)]
-            ),
-        ]
-
-        # Multi-step tool calling loop (max 8 iterations to prevent infinite loops)
-        max_iterations = 8
-        final_text = ""
-
-        for iteration in range(max_iterations):
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=messages,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    tools=[gemini_tools],
-                    temperature=0.3,
-                ),
+            # Build the initial prompt with zone context
+            context = (
+                f"Analyze zone '{zone['id']}' ({zone['name']}).\n"
+                f"Zone type: {zone.get('type', 'unknown')}\n"
+                f"Description: {zone.get('description', 'N/A')}\n"
+                f"Current scores: Congestion={scores['congestion']}, "
+                f"Pollution={scores['pollution']}, Infra Stress={scores['infra_stress']}, "
+                f"Composite={scores['composite']} ({scores['severity']})\n"
+                f"Trend: {scores.get('trend', 'stable')}\n"
+                f"Weather: {weather.get('condition', 'Unknown')}, "
+                f"{'RAINING' if weather.get('is_raining') else 'Dry'}, "
+                f"{weather.get('temperature', 28)}°C\n"
             )
 
-            # Check if Gemini wants to call tools
-            has_function_calls = False
-            function_responses = []
+            if query:
+                context += f"\nUser question: {query}\n"
 
-            for candidate in response.candidates:
-                for part in candidate.content.parts:
-                    if part.function_call:
-                        has_function_calls = True
-                        fc = part.function_call
-                        tool_name = fc.name
-                        tool_args = dict(fc.args) if fc.args else {}
+            context += (
+                "\nUse your tools to gather more data, assess the situation, "
+                "and take appropriate actions (like dispatching alerts if needed). "
+                "Then provide your analysis."
+            )
 
-                        print(f"[Agent] Tool call: {tool_name}({tool_args})")
+            # Initialize Gemini
+            from google.genai import types
 
-                        # Execute tool via MCP
-                        try:
-                            tool_result = await session.call_tool(
-                                tool_name, arguments=tool_args
-                            )
-                            result_text = ""
-                            for content in tool_result.content:
-                                if hasattr(content, "text"):
-                                    result_text += content.text
-                        except Exception as e:
-                            result_text = json.dumps({"error": str(e)})
+            client = _get_gemini_client()
 
-                        # Record the action
-                        actions_taken.append({
-                            "tool": tool_name,
-                            "input": tool_args,
-                            "output": result_text[:500],  # Truncate for frontend
-                            "timestamp": datetime.utcnow().isoformat() + "Z",
-                        })
+            gemini_tools = types.Tool(function_declarations=gemini_declarations)
 
-                        function_responses.append(
-                            types.Part.from_function_response(
-                                name=tool_name,
-                                response={"result": result_text},
-                            )
-                        )
-                    elif part.text:
-                        final_text += part.text
+            # Start the conversation
+            messages = [
+                types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=context)]
+                ),
+            ]
 
-            if has_function_calls:
-                # Add assistant's response (with function calls) to messages
-                messages.append(response.candidates[0].content)
-                # Add tool results
-                messages.append(
-                    types.Content(
-                        role="user",
-                        parts=function_responses,
-                    )
+            # Multi-step tool calling loop (max 8 iterations)
+            max_iterations = 8
+            final_text = ""
+
+            for iteration in range(max_iterations):
+                print(f"[Agent] Iteration {iteration + 1}...")
+
+                response = client.models.generate_content(
+                    model="gemini-3.1-flash-lite-preview",
+                    contents=messages,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        tools=[gemini_tools],
+                        temperature=0.3,
+                    ),
                 )
-            else:
-                # No more function calls — we have the final analysis
-                break
 
-        # Extract recommendations from the final text
-        recommendations = _extract_recommendations(final_text)
+                # Check if Gemini wants to call tools
+                has_function_calls = False
+                function_responses = []
 
-        return {
-            "zone_id": zone["id"],
-            "zone_name": zone["name"],
-            "analysis": final_text.strip(),
-            "actions_taken": actions_taken,
-            "recommendations": recommendations,
-            "scores": scores,
-            "model": "gemini-2.0-flash",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        }
+                for candidate in response.candidates:
+                    for part in candidate.content.parts:
+                        if part.function_call:
+                            has_function_calls = True
+                            fc = part.function_call
+                            tool_name = fc.name
+                            tool_args = dict(fc.args) if fc.args else {}
 
-    except Exception as e:
-        print(f"[Agent] Error during analysis: {e}")
-        raise
-    finally:
-        if session:
-            await _close_mcp(session)
+                            print(f"[Agent] Tool call: {tool_name}({tool_args})")
+
+                            # Execute tool via MCP
+                            try:
+                                tool_result = await session.call_tool(
+                                    tool_name, arguments=tool_args
+                                )
+                                result_text = ""
+                                for content in tool_result.content:
+                                    if hasattr(content, "text"):
+                                        result_text += content.text
+                            except Exception as e:
+                                result_text = json.dumps({"error": str(e)})
+                                print(f"[Agent] Tool error: {e}")
+
+                            # Record the action
+                            actions_taken.append({
+                                "tool": tool_name,
+                                "input": tool_args,
+                                "output": result_text[:500],
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            })
+
+                            function_responses.append(
+                                types.Part.from_function_response(
+                                    name=tool_name,
+                                    response={"result": result_text},
+                                )
+                            )
+                        elif part.text:
+                            final_text += part.text
+
+                if has_function_calls:
+                    # Add assistant's response (with function calls) to messages
+                    messages.append(response.candidates[0].content)
+                    # Add tool results
+                    messages.append(
+                        types.Content(
+                            role="user",
+                            parts=function_responses,
+                        )
+                    )
+                else:
+                    # No more function calls — we have the final analysis
+                    print(f"[Agent] Analysis complete after {iteration + 1} iterations")
+                    break
+
+            # Extract recommendations from the final text
+            recommendations = _extract_recommendations(final_text)
+
+            return {
+                "zone_id": zone["id"],
+                "zone_name": zone["name"],
+                "analysis": final_text.strip(),
+                "actions_taken": actions_taken,
+                "recommendations": recommendations,
+                "scores": scores,
+                "model": "gemini-3.1-flash-lite-preview",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
 
 def _extract_recommendations(text: str) -> list[str]:
@@ -321,19 +293,16 @@ def _extract_recommendations(text: str) -> list[str]:
 
         # Collect bullet/numbered items
         if in_recommendations and stripped:
-            # Match numbered items (1. 2. etc) or bullet items (- * •)
             if (
                 stripped[0].isdigit()
                 or stripped.startswith("-")
                 or stripped.startswith("*")
                 or stripped.startswith("•")
             ):
-                # Clean up the prefix
                 clean = stripped.lstrip("0123456789.-*•) ").strip()
                 if clean:
                     recommendations.append(clean)
             elif not stripped:
-                # Empty line might end the section
                 if recommendations:
                     in_recommendations = False
 
@@ -349,4 +318,4 @@ def _extract_recommendations(text: str) -> list[str]:
     if not recommendations:
         recommendations.append("Continue monitoring. Situation is under control.")
 
-    return recommendations[:6]  # Cap at 6
+    return recommendations[:6]
