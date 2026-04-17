@@ -52,6 +52,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+.env.local
+
 # PyInstaller
 *.manifest
 *.spec
