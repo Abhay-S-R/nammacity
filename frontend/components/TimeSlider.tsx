@@ -44,25 +44,23 @@ export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSlide
   }, [maxHours]);
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-6 animate-fade-in-up">
+    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-6 animate-fade-in-up">
       <div className={`glass-card p-5 transition-all duration-500 ${isFuture ? "glow-blue" : ""}`}>
         {/* Header row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl transition-all duration-300 ${
-              isFuture
-                ? "bg-blue-500/15 text-blue-400 shadow-lg shadow-blue-500/10"
-                : "bg-slate-800/80 text-slate-400"
-            }`}>
+            <div className={`p-2 rounded-xl transition-all duration-300 ${isFuture
+              ? "bg-blue-500/15 text-blue-400 shadow-lg shadow-blue-500/10"
+              : "bg-slate-800/80 text-slate-400"
+              }`}>
               {isFuture ? <Zap className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
             </div>
             <div>
               <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.12em]">
                 {isFuture ? `Forecast · +${offset}h` : "Live Conditions"}
               </p>
-              <p className={`text-xl font-bold score-number leading-tight transition-colors duration-300 ${
-                isFuture ? "text-blue-300" : "text-slate-100"
-              }`}>
+              <p className={`text-xl font-bold score-number leading-tight transition-colors duration-300 ${isFuture ? "text-blue-300" : "text-slate-100"
+                }`}>
                 {timeStr}
               </p>
             </div>
@@ -89,11 +87,10 @@ export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSlide
             {[...Array(maxHours + 1)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  i <= offset
-                    ? "bg-blue-400/70 shadow-sm shadow-blue-500/30"
-                    : "bg-slate-700/60"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i <= offset
+                  ? "bg-blue-400/70 shadow-sm shadow-blue-500/30"
+                  : "bg-slate-700/60"
+                  }`}
               />
             ))}
           </div>
@@ -114,13 +111,12 @@ export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSlide
             {hourLabels.map((label, i) => (
               <span
                 key={i}
-                className={`text-[10px] font-mono font-medium transition-all duration-300 ${
-                  i === offset
-                    ? "text-blue-400 scale-110"
-                    : i < offset
-                      ? "text-slate-500"
-                      : "text-slate-600"
-                }`}
+                className={`text-[10px] font-mono font-medium transition-all duration-300 ${i === offset
+                  ? "text-blue-400 scale-110"
+                  : i < offset
+                    ? "text-slate-500"
+                    : "text-slate-600"
+                  }`}
               >
                 {label}
               </span>
