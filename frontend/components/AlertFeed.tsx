@@ -13,7 +13,7 @@ type AlertEntry = {
     id: string;
     zoneId: string;
     zoneName: string;
-    severity: "critical" | "warning";
+    severity: "critical" | "warning" | "moderate" | "normal";
     message: string;
     timestamp: string;
     score: number;
@@ -28,62 +28,76 @@ function generateAlerts(zones: Zone[]): AlertEntry[] {
     const now = Date.now();
     const entries: AlertEntry[] = [];
 
-    zones.forEach((zone) => {
+    zones.forEach((zone, idx) => {
         const score = zone.scores.composite;
-        if (score >= 7) {
+        const severity = zone.scores.severity as "critical" | "warning" | "moderate" | "normal";
+        
+        let message = "";
+        if (severity === "critical") message = `${zone.name} crossed critical threshold (score ${score.toFixed(1)})`;
+        else if (severity === "warning") message = `${zone.name} entering elevated stress zone`;
+        else if (severity === "moderate") message = `${zone.name} experiencing moderate traffic load`;
+        else message = `${zone.name} conditions are clear and normal`;
+
+        // Add some stable artificial jitter to timestamp so it looks like a live feed
+        // using zone ID to keep it somewhat deterministic but distributed
+        const backsetMs = (idx * 110_000) % 600_000;
+
+        entries.push({
+            id: `alert-${zone.id}`,
+            zoneId: zone.id,
+            zoneName: zone.name,
+            severity,
+            message,
+            timestamp: formatTime(now, backsetMs),
+            score,
+        });
+
+        // Extra alert for rising trends if critical
+        if (severity === "critical" && zone.scores.trend === "rising") {
             entries.push({
-                id: `critical-${zone.id}`,
+                id: `trend-${zone.id}`,
                 zoneId: zone.id,
                 zoneName: zone.name,
                 severity: "critical",
-                message: `${zone.name} crossed critical threshold (score ${score.toFixed(1)})`,
-                timestamp: formatTime(now, Math.random() * 600_000),
-                score,
-            });
-
-            // Extra alert for rising trends
-            if (zone.scores.trend === "rising") {
-                entries.push({
-                    id: `trend-${zone.id}`,
-                    zoneId: zone.id,
-                    zoneName: zone.name,
-                    severity: "critical",
-                    message: `Rising trend detected in ${zone.name}`,
-                    timestamp: formatTime(now, Math.random() * 1_200_000 + 600_000),
-                    score,
-                });
-            }
-        } else if (score >= 5) {
-            entries.push({
-                id: `warning-${zone.id}`,
-                zoneId: zone.id,
-                zoneName: zone.name,
-                severity: "warning",
-                message: `${zone.name} entering elevated stress zone`,
-                timestamp: formatTime(now, Math.random() * 900_000),
-                score,
+                message: `Rising trend detected in ${zone.name} — rapid congestion build-up`,
+                timestamp: formatTime(now, backsetMs + 120_000),
+                score: score + 0.1, // slightly higher to rank above its own base alert
             });
         }
     });
 
-    // Sort by score descending (most severe first)
+    // Sort by score descending (most severe first: critical -> warning -> moderate -> normal)
     return entries.sort((a, b) => b.score - a.score);
 }
 
 const SEV_CONFIG = {
     critical: {
-        color: "#ef4444",
+        color: "#ef4444", // Red
         bg: "rgba(239,68,68,0.08)",
         border: "rgba(239,68,68,0.3)",
         icon: "🔴",
         label: "CRITICAL",
     },
     warning: {
-        color: "#eab308",
+        color: "#f97316", // Orange
+        bg: "rgba(249,115,22,0.08)",
+        border: "rgba(249,115,22,0.3)",
+        icon: "🟠",
+        label: "WARNING",
+    },
+    moderate: {
+        color: "#eab308", // Yellow
         bg: "rgba(234,179,8,0.08)",
         border: "rgba(234,179,8,0.3)",
         icon: "🟡",
-        label: "WARNING",
+        label: "MODERATE",
+    },
+    normal: {
+        color: "#22c55e", // Green
+        bg: "rgba(34,197,94,0.08)",
+        border: "rgba(34,197,94,0.3)",
+        icon: "🟢",
+        label: "NORMAL",
     },
 };
 
@@ -180,7 +194,7 @@ export default function AlertFeed({ zones, isOpen, onToggle }: Props) {
                                 gap: "8px",
                             }}
                         >
-                            🔔 Alert Feed
+                            Status Feed
                             {criticalCount > 0 && (
                                 <span
                                     style={{
