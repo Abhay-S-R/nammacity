@@ -279,9 +279,8 @@ export default function MapView({
         <Map
           mapLib={maplibregl as any}
           mapStyle={mapStyle}
-        >
-          <NavigationControl position="bottom-right" />
-        </Map>
+          attributionControl={false}
+        />
       </DeckGL>
 
       {/* Vignette overlay — darkens map edges for UI contrast */}
