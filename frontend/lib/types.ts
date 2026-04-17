@@ -149,6 +149,8 @@ export interface ScenariosResponse {
 export interface HexPoint {
   position: [number, number]; // [lng, lat] — Deck.gl order
   weight: number;
+  colorWeight: number;
+  color: [number, number, number, number];
   zone: Zone;
 }
 

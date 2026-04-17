@@ -5,8 +5,7 @@ import Map, { NavigationControl } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import DeckGL from "@deck.gl/react";
-import { HexagonLayer } from "@deck.gl/aggregation-layers";
-import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { ScatterplotLayer, TextLayer, ColumnLayer } from "@deck.gl/layers";
 import { Zone, HexPoint } from "../lib/types";
 
 // Free dark basemap — no API key needed
@@ -22,22 +21,45 @@ type MapViewProps = {
   activeLayer?: "composite" | "congestion" | "pollution" | "infra_stress";
 };
 
-// Refined color ramp: deep green → amber → hot orange → vivid red
-const SEVERITY_COLOR_RANGE: [number, number, number, number][] = [
-  [16, 185, 129, 220],   // Emerald — normal
-  [34, 197, 94, 220],    // Green — low
-  [234, 179, 8, 230],    // Amber — moderate
-  [251, 146, 60, 240],   // Orange — elevated
-  [239, 68, 68, 245],    // Red — high
-  [220, 38, 38, 255],    // Deep red — critical
-];
-
 export default function MapView({
   zones,
   onZoneClick,
   selectedZoneId,
   activeLayer = "composite",
 }: MapViewProps) {
+  type SeverityBar = {
+    elevationWeight: number;
+    colorWeight: number;
+    color: [number, number, number, number];
+  };
+
+  const getPriorityBarsFromScore = (finalScore: number): SeverityBar[] => {
+    // One color per region, based on score band:
+    // <=3: 1 green rod | >3 and <=5.5: 2 yellow rods | >5.5 and <=7.5: 3 orange rods | >7.5: 4 red rods.
+    // Category height order is always preserved: red > orange > yellow > green.
+    if (finalScore > 7.5) {
+      return [
+        { elevationWeight: 1160, colorWeight: 9.0, color: [239, 68, 68, 245] },
+        { elevationWeight: 1020, colorWeight: 9.0, color: [239, 68, 68, 245] },
+        { elevationWeight: 890, colorWeight: 9.0, color: [239, 68, 68, 245] },
+        { elevationWeight: 770, colorWeight: 9.0, color: [239, 68, 68, 245] },
+      ];
+    }
+    if (finalScore > 5.5) {
+      return [
+        { elevationWeight: 760, colorWeight: 7.0, color: [249, 115, 22, 240] },
+        { elevationWeight: 670, colorWeight: 7.0, color: [249, 115, 22, 240] },
+        { elevationWeight: 590, colorWeight: 7.0, color: [249, 115, 22, 240] },
+      ];
+    }
+    if (finalScore > 3) {
+      return [
+        { elevationWeight: 470, colorWeight: 5.0, color: [234, 179, 8, 230] },
+        { elevationWeight: 390, colorWeight: 5.0, color: [234, 179, 8, 230] },
+      ];
+    }
+    return [{ elevationWeight: 220, colorWeight: 2.0, color: [34, 197, 94, 220] }];
+  };
 
   // Seeded pseudo-random for deterministic scatter (same zone = same points every render)
   function seededRandom(seed: number): number {
@@ -71,74 +93,59 @@ export default function MapView({
   // Generate hexagon data points from zone scores
   const hexData = useMemo(() => {
     const points: HexPoint[] = [];
+
     zones.forEach((zone, zoneIdx) => {
       const score = Math.max(
-        0.5,
+        0,
         (zone.scores[activeLayer as keyof typeof zone.scores] as number) || 0
       );
+      const bars = getPriorityBarsFromScore(score);
 
-      // Green/normal zones (score < 3.5) get 0 height — they should be flat
-      // Only moderate+ zones get elevation
-      const elevationWeight = score < 3.5 ? 0 : score;
-
-      // Fixed point count per zone — score drives weight, not density
-      const count = 5;
-      for (let i = 0; i < count; i++) {
+      // Strictly capped at 4 bars per junction.
+      bars.forEach((bar, i) => {
         // Deterministic seed from zone index + point index
         const seed = zoneIdx * 100 + i;
-        const u1 = Math.max(0.001, seededRandom(seed));
-        const u2 = seededRandom(seed + 50);
-        const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-        const z1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-
-        // Spread radius ~1-2km around zone center
-        const spread = 0.01;
+        const angle = seededRandom(seed) * Math.PI * 2;
+        const distance = i * 0.0022;
+        const z0 = Math.cos(angle) * distance;
+        const z1 = Math.sin(angle) * distance;
         points.push({
-          position: [zone.center[1] + z0 * spread, zone.center[0] + z1 * spread],
-          weight: elevationWeight,
+          position: [zone.center[1] + z0, zone.center[0] + z1],
+          weight: bar.elevationWeight,
+          colorWeight: bar.colorWeight,
+          color: bar.color,
           zone: zone,
         });
-      }
+      });
     });
     return points;
   }, [zones, activeLayer]);
 
   const layers = [
-    // 3D Hexagon heatmap layer
-    new HexagonLayer<HexPoint>({
-      id: "heatmap-layer",
+    // Explicit 3D bar layer (stable heights, no aggregation collapse)
+    new ColumnLayer<HexPoint>({
+      id: "zone-bars-layer",
       data: hexData,
       pickable: true,
       extruded: true,
-      radius: 600,
-      elevationScale: 6,
-      gpuAggregation: false, // CRITICAL: CPU mode so points are available on click
+      radius: 240,
+      diskResolution: 6, // hexagonal prism
+      elevationScale: 3,
       getPosition: (d) => d.position,
-      getElevationWeight: (d) => d.weight,
-      elevationAggregation: "MEAN",
-      getColorWeight: (d) => d.weight,
-      colorAggregation: "MEAN",
-      colorRange: SEVERITY_COLOR_RANGE,
+      getElevation: (d) => d.weight,
+      getFillColor: (d) => d.color,
       coverage: 0.8,
-      opacity: 0.85,
-      upperPercentile: 95,
+      opacity: 0.9,
       transitions: {
         elevationScale: 800,
-        getColorWeight: 600,
+        getElevation: 600,
       },
       onClick: (info) => {
         if (info.object) {
-          // CPU aggregation mode: info.object.points is an array of { source, index }
-          const points = info.object.points;
-          if (points && points.length > 0) {
-            const firstPoint = points[0];
-            // Try .source (deck.gl CPU aggregation standard), then direct access
-            const hexPoint: HexPoint | undefined =
-              (firstPoint as any).source ?? (firstPoint as any);
-            if (hexPoint && hexPoint.zone) {
-              onZoneClick(hexPoint.zone);
-              return true;
-            }
+          const barPoint = info.object as HexPoint;
+          if (barPoint.zone) {
+            onZoneClick(barPoint.zone);
+            return true;
           }
 
           // Fallback: use the click coordinate to find nearest zone
