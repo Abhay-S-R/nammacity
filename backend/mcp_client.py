@@ -293,13 +293,10 @@ def _extract_recommendations(text: str) -> list[str]:
 
         # Collect bullet/numbered items
         if in_recommendations and stripped:
-            if (
-                stripped[0].isdigit()
-                or stripped.startswith("-")
-                or stripped.startswith("*")
-                or stripped.startswith("•")
-            ):
-                clean = stripped.lstrip("0123456789.-*•) ").strip()
+            import re
+            # Only match structural bullets at the start of the line, keeping markdown bold (**) intact
+            if re.match(r'^(\d+\.[\)]?|[-•]|\*(?!\*))\s+', stripped):
+                clean = re.sub(r'^(\d+\.[\)]?|[-•]|\*(?!\*))\s+', '', stripped).strip()
                 if clean:
                     recommendations.append(clean)
             elif not stripped:
