@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "NammaCity AI - Command Center",
-  description: "Proactive city intelligence dashboard for Bengaluru",
+  title: "NammaCity AI — Command Center",
+  description: "Proactive city intelligence dashboard for Bengaluru — forecasting congestion, pollution, and infrastructure stress across city zones.",
+  keywords: ["Bengaluru", "city intelligence", "traffic", "pollution", "AI", "dashboard"],
 };
 
 export default function RootLayout({
@@ -25,9 +28,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased bg-black text-white`}
+      className={`dark ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-950">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0a0e17] text-slate-100 selection:bg-blue-500/30 selection:text-white">
+        {children}
+      </body>
     </html>
   );
 }

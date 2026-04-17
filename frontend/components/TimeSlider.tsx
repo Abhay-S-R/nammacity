@@ -1,7 +1,7 @@
 "use client";
 
-import { Clock, Play, Pause } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Clock, Play, Pause, Zap } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 
 type TimeSliderProps = {
   offset: number;
@@ -11,7 +11,7 @@ type TimeSliderProps = {
 
 export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSliderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying) {
@@ -21,38 +21,83 @@ export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSlide
     }
     return () => clearInterval(interval);
   }, [isPlaying, offset, maxHours, onChange]);
-  
+
   // Format current time + offset
-  const now = new Date();
-  now.setHours(now.getHours() + offset);
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const timeStr = useMemo(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + offset);
+    return now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }, [offset]);
+
   const isFuture = offset > 0;
+  const fillPercent = (offset / maxHours) * 100;
+
+  // Generate hour labels with actual times
+  const hourLabels = useMemo(() => {
+    const now = new Date();
+    return [...Array(maxHours + 1)].map((_, i) => {
+      if (i === 0) return "NOW";
+      const d = new Date(now);
+      d.setHours(d.getHours() + i);
+      return d.toLocaleTimeString("en-US", { hour: "numeric" });
+    });
+  }, [maxHours]);
 
   return (
-    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-6">
-      <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-700/50 rounded-2xl p-5 shadow-xl shadow-black/40">
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-6 animate-fade-in-up">
+      <div className={`glass-card p-5 transition-all duration-500 ${isFuture ? "glow-blue" : ""}`}>
+        {/* Header row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isFuture ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-800 text-zinc-300'}`}>
-              <Clock className="w-5 h-5" />
+            <div className={`p-2 rounded-xl transition-all duration-300 ${
+              isFuture
+                ? "bg-blue-500/15 text-blue-400 shadow-lg shadow-blue-500/10"
+                : "bg-slate-800/80 text-slate-400"
+            }`}>
+              {isFuture ? <Zap className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
             </div>
             <div>
-              <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">
-                {isFuture ? `Forecast: +${offset} Hours` : "Live Conditions"}
+              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.12em]">
+                {isFuture ? `Forecast · +${offset}h` : "Live Conditions"}
               </p>
-              <p className="text-lg font-bold text-zinc-100">{timeStr}</p>
+              <p className={`text-xl font-bold score-number leading-tight transition-colors duration-300 ${
+                isFuture ? "text-blue-300" : "text-slate-100"
+              }`}>
+                {timeStr}
+              </p>
             </div>
           </div>
-          
-          <button 
+
+          {/* Play/Pause Button */}
+          <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-300 transition-colors"
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+              ${isPlaying
+                ? "bg-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/20 hover:bg-blue-500/30"
+                : "bg-slate-800/80 text-slate-400 hover:bg-slate-700/80 hover:text-slate-300"
+              }`}
+            aria-label={isPlaying ? "Pause forecast" : "Play forecast"}
           >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-1" />}
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
         </div>
-        
-        <div className="relative pt-2 pb-1">
+
+        {/* Slider Track */}
+        <div className="relative pt-1 pb-1">
+          {/* Step dots behind slider */}
+          <div className="absolute top-[9px] left-0 right-0 flex justify-between px-[2px] pointer-events-none">
+            {[...Array(maxHours + 1)].map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                  i <= offset
+                    ? "bg-blue-400/70 shadow-sm shadow-blue-500/30"
+                    : "bg-slate-700/60"
+                }`}
+              />
+            ))}
+          </div>
+
           <input
             type="range"
             min="0"
@@ -60,12 +105,24 @@ export default function TimeSlider({ offset, onChange, maxHours = 6 }: TimeSlide
             step="1"
             value={offset}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            className="slider-custom relative z-10"
+            style={{ "--slider-fill": `${fillPercent}%` } as React.CSSProperties}
           />
-          <div className="flex justify-between mt-2 px-1">
-            {[...Array(maxHours + 1)].map((_, i) => (
-              <span key={i} className="text-xs text-zinc-500 font-mono">
-                {i === 0 ? "Now" : `+${i}h`}
+
+          {/* Labels */}
+          <div className="flex justify-between mt-2.5 px-[2px]">
+            {hourLabels.map((label, i) => (
+              <span
+                key={i}
+                className={`text-[10px] font-mono font-medium transition-all duration-300 ${
+                  i === offset
+                    ? "text-blue-400 scale-110"
+                    : i < offset
+                      ? "text-slate-500"
+                      : "text-slate-600"
+                }`}
+              >
+                {label}
               </span>
             ))}
           </div>
