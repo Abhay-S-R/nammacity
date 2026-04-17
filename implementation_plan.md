@@ -467,15 +467,14 @@ python-dotenv>=1.0
 - **Milestone:** Map shows colored 3D columns for Bengaluru zones. Backend API returns scored data. MCP server has one working tool.
 
 ### Phase 2: Core Features (Hours 8–20)
-- [ ] **Frontend:** Build DashboardHeader with summary cards
-- [ ] **Frontend:** Build TimeSlider → wired to backend `/api/forecast` → columns animate
-- [ ] **Frontend:** Build ZonePanel (click zone → detail slides in)
-- [ ] **Frontend:** Build ActionButtons with toast notifications
-- [ ] **Backend:** Build remaining MCP tools (weather, stations, dispatch, report)
-- [ ] **Backend:** Build MCP Client + Gemini integration (`mcp_client.py`)
-- [ ] **Backend:** Build `POST /api/agent/analyze` → agent orchestration endpoint
-- [ ] **Frontend:** Build AIAnalysis component — display analysis + agent action log
-- [ ] **Frontend:** Polish the dark UI — glow effects, transitions, typography
+*With team reduced to 3 members, tasks are heavily parallelized to optimize frontend/backend integration.*
+- [ ] **Dev A (Frontend UI):** Build DashboardHeader, ZonePanel, and ActionButtons with toast notifications.
+- [ ] **Dev A (Frontend UI):** Polish the dark UI — glow effects, transitions, typography.
+- [ ] **Dev B (Vis & Integration):** Build TimeSlider → wired to backend `/api/forecast` → deck.gl columns animate.
+- [ ] **Dev B (Vis & Integration):** Build AIAnalysis component on frontend — display analysis + agent action log.
+- [ ] **Dev C (Backend & Agent):** Build remaining MCP tools (weather, stations, dispatch, report).
+- [ ] **Dev C (Backend & Agent):** Build MCP Client + Gemini integration (`mcp_client.py`).
+- [ ] **Dev C (Backend & Agent):** Build `POST /api/agent/analyze` endpoint.
 - **Milestone:** Full interactive demo flow works end-to-end. Agent autonomously calls tools.
 
 ### Phase 3: Tier 2 + Integration (Hours 20–28)
@@ -514,21 +513,19 @@ python-dotenv>=1.0
 
 ---
 
-## Team Allocation (4 Developers)
+## Team Allocation (3 Developers)
 
-| Dev | Role | Language | Phase 1 (0-8h) | Phase 2 (8-20h) | Phase 3-4 (20-36h) |
-|---|---|---|---|---|---|
-| **A** | Frontend Lead | TypeScript | Next.js setup, Tailwind dark theme, layout shell, Mapbox basic view | DashboardHeader, TimeSlider, ZonePanel, ActionButtons | Polish, transitions, demo prep |
-| **B** | Visualization | TypeScript | Deck.gl setup, HexagonLayer config, zone markers | Wire slider → deck.gl animations, AIAnalysis component, layer toggles | Integration with backend, bug fixes |
-| **C** | Backend + Data | Python | FastAPI setup, zone/event JSON files, scoring engine, REST endpoints | `/api/forecast`, `/api/whatif`, citizen reporter, edge cases | What-If scenarios, deploy backend |
-| **D** | MCP + Agent | Python | MCP Server setup, define all 5 tools, test tools via CLI | MCP Client, Gemini integration, agentic tool chain, `/api/agent/*` | Polish agent responses, cache backup |
+| Dev | Role | Language | Phase 2 (8-20h) Focus | Phase 3-4 (20-36h) Focus |
+|---|---|---|---|---|
+| **A** | Frontend UI | TypeScript | DashboardHeader, ZonePanel, ActionButtons, Dark UI Polish | Alert feed, What-If UI, layer toggles, demo presentation prep |
+| **B** | Vis & Fullstack | TypeScript | TimeSlider + animations, AIAnalysis component, integration | Bug fixes, testing frontend, deployment, citizen reporter UI |
+| **C** | Backend & Agent | Python | All MCP tools, MCP client, Gemini orchestration, `/api/agent/*` | What-If scenarios APIs, `/api/reports`, edge cases, deploy backend |
 
 > [!IMPORTANT]
-> **Hour 0 task (all 4 devs, 30 minutes):** Define the API contract together. What does `GET /api/zones` return? What JSON shape does the frontend expect? Write it in a shared doc or `frontend/lib/types.ts`. Dev C and D code to this contract in Python. Dev A and B consume it in TypeScript.
+> **Integration Checkpoints:** With 3 developers, Dev B sits between UI (Dev A) and Backend (Dev C). Dev B should coordinate closely with Dev C on API structures and with Dev A on where components will be placed.
 
 > [!TIP]
-> **Dev C and D pair closely.** The scoring engine (C) feeds the MCP tools (D). They share the `backend/data/` directory and should agree on function interfaces early. 
-> **Dev A and B pair closely.** A builds the component shells, B fills them with Deck.gl and data visualization.
+> **Consolidated Backend:** Dev C is now handling both the data scoring and the AI agent orchestration. Ensure that the scoring engine remains simple so Dev C can allocate enough time to make the Gemini tool calls robust.
 
 ---
 
