@@ -8,7 +8,8 @@ import type {
   ScenariosResponse,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const rawBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { cache: "no-store" });
