@@ -66,20 +66,28 @@ async def analyze_zone(body: AnalyzeRequest, request: Request):
     station_ids = zone.get("nearby_stations", [])
     stations = [s for s in state["stations"] if s["id"] in station_ids]
     
-    # Try MCP + Gemini analysis
+    # Try MCP + Gemini analysis with a strict 10-second timeout
     try:
+        import asyncio
         from mcp_client import run_agent_analysis
-        result = await run_agent_analysis(
-            zone=zone,
-            scores=scores,
-            weather=weather,
-            stations=stations,
-            active_events=active_events,
-            query=body.query,
-            alerts=state.get("alerts", []),
+        
+        result = await asyncio.wait_for(
+            run_agent_analysis(
+                zone=zone,
+                scores=scores,
+                weather=weather,
+                stations=stations,
+                active_events=active_events,
+                query=body.query,
+                alerts=state.get("alerts", []),
+            ),
+            timeout=10.0
         )
         return result
-    except BaseException as e:
+    except asyncio.TimeoutError:
+        print(f"[Agent] Analysis timed out after 10s, using fallback UX.")
+        return _fallback_analysis(zone, scores, weather, stations, active_events, current_hour)
+    except Exception as e:
         # Fallback to rule-based analysis
         import traceback
         print(f"[Agent] Gemini/MCP unavailable, using fallback: {e}")
