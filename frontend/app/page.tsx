@@ -111,7 +111,7 @@ export default function Home() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <main className="relative w-full h-full bg-zinc-950 overflow-hidden font-sans text-zinc-100 flex-1">
+    <main className="relative w-full h-full bg-zinc-950 overflow-hidden font-sans text-zinc-100 flex-1" onContextMenu={(e) => e.preventDefault()}>
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/60 to-black/90 pointer-events-none z-0" />
 
