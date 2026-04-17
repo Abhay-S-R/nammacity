@@ -4,6 +4,7 @@ import { useState } from "react";
 import { analyzeZone } from "../lib/api";
 import { AgentAnalysis } from "../lib/types";
 import { Sparkles, Terminal, CheckCircle2, RefreshCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export default function AIAnalysis({ zoneId }: { zoneId: string }) {
   const [loading, setLoading] = useState(false);
@@ -71,7 +72,7 @@ export default function AIAnalysis({ zoneId }: { zoneId: string }) {
           <span className="font-semibold text-sm text-zinc-200">
             {analysis?.model === "rule-based-fallback"
               ? "Rule-Based Analysis"
-              : "Gemini Flash Agent"}
+              : "AI Analysis"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -103,9 +104,32 @@ export default function AIAnalysis({ zoneId }: { zoneId: string }) {
           </div>
         ) : analysis ? (
           <>
-            {/* Analysis Text */}
-            <div className="text-zinc-300 leading-relaxed border-l-2 border-blue-500 pl-3 whitespace-pre-line">
-              {analysis.analysis}
+            {/* Analysis Text rendered intelligently as Markdown */}
+            <div className="text-zinc-300 leading-relaxed border-l-2 border-blue-500 pl-5 py-1 overflow-x-hidden">
+              <ReactMarkdown
+                components={{
+                  h3: ({ node, ...props }) => (
+                    <h3 className="text-[13px] font-bold text-blue-400 mt-5 mb-2 uppercase tracking-widest bg-blue-500/10 inline-block px-2 py-1 rounded" {...props} />
+                  ),
+                  strong: ({ node, ...props }) => (
+                    <strong className="font-semibold text-blue-200" {...props} />
+                  ),
+                  p: ({ node, ...props }) => (
+                    <p className="mb-4 text-[13px]" {...props} />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc Marker:text-blue-500 space-y-1.5 mb-4 ml-4" {...props} />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="text-[13px] text-zinc-300 pl-1" {...props} />
+                  ),
+                  code: ({ node, ...props }) => (
+                    <code className="px-1.5 py-0.5 bg-zinc-800 rounded font-mono text-[11px] text-emerald-400" {...props} />
+                  ),
+                }}
+              >
+                {analysis.analysis}
+              </ReactMarkdown>
             </div>
 
             {/* Actions Taken */}
@@ -114,29 +138,45 @@ export default function AIAnalysis({ zoneId }: { zoneId: string }) {
                 <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                   Actions Taken
                 </h4>
-                {analysis.actions_taken.map((action, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-2 items-start text-xs font-mono bg-black/40 p-2 rounded text-zinc-400"
-                  >
-                    <span className="text-blue-500 shrink-0">➜</span>
-                    <span className="text-emerald-400 break-words">{action}</span>
-                  </div>
-                ))}
+                {analysis.actions_taken.map((action: any, i) => {
+                  const actionText = typeof action === 'string'
+                    ? action
+                    : `Used tool: ${action.tool || 'unknown'}`;
+                  
+                  return (
+                    <div
+                      key={i}
+                      className="flex gap-2 items-start text-xs font-mono bg-black/40 p-2 rounded text-zinc-400"
+                    >
+                      <span className="text-blue-500 shrink-0">➜</span>
+                      <span className="text-emerald-400 break-words">{actionText}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
             {/* Recommendations */}
             {analysis.recommendations && analysis.recommendations.length > 0 && (
               <div className="space-y-2 mt-4 pt-4 border-t border-zinc-800/50">
-                <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
                   Recommendations
                 </h4>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {analysis.recommendations.map((rec, i) => (
-                    <li key={i} className="flex gap-2 items-start text-zinc-300">
+                    <li key={i} className="flex gap-2.5 items-start">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{rec}</span>
+                      <div className="text-zinc-300 text-[13px] leading-relaxed w-full">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ node, ...props }) => <span {...props} />,
+                            strong: ({ node, ...props }) => <strong className="font-semibold text-zinc-100" {...props} />,
+                            code: ({ node, ...props }) => <code className="px-1 py-0.5 bg-zinc-800 rounded font-mono text-[11px] text-emerald-400" {...props} />
+                          }}
+                        >
+                          {rec}
+                        </ReactMarkdown>
+                      </div>
                     </li>
                   ))}
                 </ul>
