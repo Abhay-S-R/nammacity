@@ -52,18 +52,7 @@ function generateAlerts(zones: Zone[]): AlertEntry[] {
             score,
         });
 
-        // Extra alert for rising trends if critical
-        if (severity === "critical" && zone.scores.trend === "rising") {
-            entries.push({
-                id: `trend-${zone.id}`,
-                zoneId: zone.id,
-                zoneName: zone.name,
-                severity: "critical",
-                message: `Rising trend detected in ${zone.name} — rapid congestion build-up`,
-                timestamp: formatTime(now, backsetMs + 120_000),
-                score: score + 0.1, // slightly higher to rank above its own base alert
-            });
-        }
+
     });
 
     // Sort by score descending (most severe first: critical -> warning -> moderate -> normal)
@@ -103,7 +92,7 @@ const SEV_CONFIG = {
 
 export default function AlertFeed({ zones, isOpen, onToggle }: Props) {
     const alerts = useMemo(() => generateAlerts(zones), [zones]);
-    const criticalCount = alerts.filter((a) => a.severity === "critical").length;
+    const criticalCount = zones.filter((z) => z.scores.severity === "critical").length;
 
     return (
         <>

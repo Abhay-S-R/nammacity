@@ -108,7 +108,7 @@ export default function DashboardHeader({ stats }: { stats: CityStats | null }) 
         />
         <StatCard
           icon={<Activity className="w-5 h-5 text-orange-400" />}
-          label="Active Alerts"
+          label="AI Dispatches"
           value={stats.activeAlerts}
           color="orange"
           delay={80}
