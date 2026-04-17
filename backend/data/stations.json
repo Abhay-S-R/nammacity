@@ -1,0 +1,108 @@
+{
+  "stations": [
+    {
+      "id": "btp-madiwala",
+      "name": "BTP Station Madiwala",
+      "location": [12.9220, 77.6180],
+      "jurisdiction_zones": ["silk-board", "koramangala", "bannerghatta"],
+      "contact": "+91-80-2294-XXXX",
+      "capacity": "12 marshals, 4 patrol vehicles"
+    },
+    {
+      "id": "btp-hebbal",
+      "name": "BTP Station Hebbal",
+      "location": [13.0380, 77.5950],
+      "jurisdiction_zones": ["hebbal", "yelahanka"],
+      "contact": "+91-80-2295-XXXX",
+      "capacity": "10 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-whitefield",
+      "name": "BTP Station Whitefield",
+      "location": [12.9710, 77.7460],
+      "jurisdiction_zones": ["whitefield"],
+      "contact": "+91-80-2846-XXXX",
+      "capacity": "8 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-ecity",
+      "name": "BTP Station Electronic City",
+      "location": [12.8460, 77.6580],
+      "jurisdiction_zones": ["electronic-city"],
+      "contact": "+91-80-2852-XXXX",
+      "capacity": "8 marshals, 2 patrol vehicles"
+    },
+    {
+      "id": "btp-krpuram",
+      "name": "BTP Station KR Puram",
+      "location": [13.0030, 77.6940],
+      "jurisdiction_zones": ["kr-puram"],
+      "contact": "+91-80-2561-XXXX",
+      "capacity": "10 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-peenya",
+      "name": "BTP Station Peenya",
+      "location": [13.0320, 77.5180],
+      "jurisdiction_zones": ["peenya"],
+      "contact": "+91-80-2839-XXXX",
+      "capacity": "8 marshals, 2 patrol vehicles"
+    },
+    {
+      "id": "btp-majestic",
+      "name": "BTP Station Majestic",
+      "location": [12.9780, 77.5720],
+      "jurisdiction_zones": ["majestic"],
+      "contact": "+91-80-2287-XXXX",
+      "capacity": "15 marshals, 5 patrol vehicles"
+    },
+    {
+      "id": "btp-indiranagar",
+      "name": "BTP Station Indiranagar",
+      "location": [12.9790, 77.6400],
+      "jurisdiction_zones": ["indiranagar"],
+      "contact": "+91-80-2527-XXXX",
+      "capacity": "8 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-central",
+      "name": "BTP Station Central (MG Road)",
+      "location": [12.9760, 77.6050],
+      "jurisdiction_zones": ["mg-road"],
+      "contact": "+91-80-2294-XXXX",
+      "capacity": "12 marshals, 4 patrol vehicles"
+    },
+    {
+      "id": "btp-jpnagar",
+      "name": "BTP Station JP Nagar",
+      "location": [12.9100, 77.5850],
+      "jurisdiction_zones": ["bannerghatta", "jayanagar"],
+      "contact": "+91-80-2658-XXXX",
+      "capacity": "8 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-marathahalli",
+      "name": "BTP Station Marathahalli",
+      "location": [12.9580, 77.6960],
+      "jurisdiction_zones": ["marathahalli", "bellandur"],
+      "contact": "+91-80-2523-XXXX",
+      "capacity": "10 marshals, 3 patrol vehicles"
+    },
+    {
+      "id": "btp-yelahanka",
+      "name": "BTP Station Yelahanka",
+      "location": [13.1020, 77.5940],
+      "jurisdiction_zones": ["yelahanka"],
+      "contact": "+91-80-2846-XXXX",
+      "capacity": "6 marshals, 2 patrol vehicles"
+    },
+    {
+      "id": "btp-yeshwanthpur",
+      "name": "BTP Station Yeshwanthpur",
+      "location": [13.0240, 77.5490],
+      "jurisdiction_zones": ["yeshwanthpur"],
+      "contact": "+91-80-2334-XXXX",
+      "capacity": "8 marshals, 3 patrol vehicles"
+    }
+  ]
+}

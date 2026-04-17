@@ -1,0 +1,90 @@
+{
+  "scenarios": [
+    {
+      "id": "ipl-match",
+      "name": "🏏 IPL Match at Chinnaswamy",
+      "description": "RCB home game at M. Chinnaswamy Stadium. Expect 35,000+ crowd movement around MG Road, Indiranagar, and Koramangala from 4 PM onwards.",
+      "active_events": ["ipl-chinnaswamy"],
+      "weather": {
+        "condition": "Clear",
+        "is_raining": false,
+        "temperature": 32
+      }
+    },
+    {
+      "id": "monsoon-heavy",
+      "name": "🌧️ Heavy Monsoon Downpour",
+      "description": "IMD orange alert for Bengaluru. Heavy rainfall expected across all zones. Risk of flooding in low-lying areas like Bellandur and Silk Board underpasses.",
+      "active_events": ["heavy-rain"],
+      "weather": {
+        "condition": "Heavy Rain",
+        "is_raining": true,
+        "temperature": 24
+      }
+    },
+    {
+      "id": "orr-blocked",
+      "name": "🚧 ORR Blocked at Marathahalli",
+      "description": "Major accident blocks 2 lanes of ORR near Marathahalli bridge. Traffic diverted through Whitefield and Bellandur inner roads.",
+      "active_events": ["construction-orr"],
+      "weather": {
+        "condition": "Partly Cloudy",
+        "is_raining": false,
+        "temperature": 29
+      },
+      "zone_overrides": {
+        "marathahalli": { "base_traffic_load_add": 3, "base_infra_stress_add": 2 },
+        "bellandur": { "base_traffic_load_add": 2 },
+        "whitefield": { "base_traffic_load_add": 2 }
+      }
+    },
+    {
+      "id": "metro-strike",
+      "name": "🚇 Namma Metro Strike",
+      "description": "Metro services suspended across Purple and Green lines. All metro commuters diverted to buses and private vehicles.",
+      "active_events": [],
+      "weather": {
+        "condition": "Clear",
+        "is_raining": false,
+        "temperature": 30
+      },
+      "zone_overrides": {
+        "majestic": { "base_traffic_load_add": 4, "base_infra_stress_add": 3 },
+        "mg-road": { "base_traffic_load_add": 3 },
+        "indiranagar": { "base_traffic_load_add": 2 },
+        "silk-board": { "base_traffic_load_add": 2 },
+        "whitefield": { "base_traffic_load_add": 2 },
+        "peenya": { "base_traffic_load_add": 2 },
+        "yeshwanthpur": { "base_traffic_load_add": 2 }
+      }
+    },
+    {
+      "id": "school-holiday",
+      "name": "🎉 School Holiday (Dasara)",
+      "description": "All schools closed for Dasara vacation. Reduced morning congestion in school zones, but increased recreational traffic in commercial areas.",
+      "active_events": ["weekend-market"],
+      "weather": {
+        "condition": "Clear",
+        "is_raining": false,
+        "temperature": 28
+      },
+      "zone_overrides": {
+        "jayanagar": { "base_traffic_load_add": -2 },
+        "koramangala": { "base_traffic_load_add": -1 },
+        "mg-road": { "base_traffic_load_add": 1 },
+        "indiranagar": { "base_traffic_load_add": 1 }
+      }
+    },
+    {
+      "id": "rain-plus-ipl",
+      "name": "⛈️🏏 Rain + IPL Double Whammy",
+      "description": "Heavy rain during an IPL match at Chinnaswamy. Worst-case scenario for central Bengaluru traffic.",
+      "active_events": ["heavy-rain", "ipl-chinnaswamy"],
+      "weather": {
+        "condition": "Heavy Rain",
+        "is_raining": true,
+        "temperature": 23
+      }
+    }
+  ]
+}
