@@ -33,20 +33,20 @@ Built with a FastAPI backend, a Next.js frontend with deck.gl 3D visualization, 
                          REST API
                               |
                      +--------v-----------+
-                     |   FastAPI Backend   |
-                     |   (Scoring Engine)  |
+                     |   FastAPI Backend  |
+                     |   (Scoring Engine) |
                      +--------+-----------+
                               |
                +--------------+--------------+
                |                             |
-      +--------v--------+        +----------v----------+
-      |   JSON Data      |        |   MCP Client         |
-      |   (zones, events,|        |   (Gemini Orchestrator)
-      |    stations,     |        +---------+------------+
+      +--------v---------+        +----------v----------+
+      |   JSON Data      |        |   MCP Client        |
+      |   (zones, events,|        |(Gemini Orchestrator)|
+      |    stations,     |        +---------+-----------+
       |    scenarios)    |                  |
-      +-----------------+           stdio subprocess
-                                          |
-                                +---------v-----------+
+      +------------------+              stdio subprocess
+                                            |
+                                +-----------v----------+
                                 |   MCP Server         |
                                 |   (5 callable tools) |
                                 +----------------------+
