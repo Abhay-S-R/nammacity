@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NammaCity AI — Command Center",
+  title: "NammaCity AI",
   description: "Proactive city intelligence dashboard for Bengaluru — forecasting congestion, pollution, and infrastructure stress across city zones.",
   keywords: ["Bengaluru", "city intelligence", "traffic", "pollution", "AI", "dashboard"],
 };
