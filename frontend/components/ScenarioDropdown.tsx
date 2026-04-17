@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { applyScenario } from "../lib/api";
+import { applyScenario, fetchZones } from "../lib/api";
 import type { Zone } from "../lib/types";
 
 type Props = {
@@ -72,8 +72,9 @@ export default function ScenarioDropdown({ onScenariosApplied }: Props) {
         setActiveScenario(scenario);
         setLoading(true);
         try {
-            const result = await applyScenario(scenario.id);
-            onScenariosApplied(result.zones);
+            await applyScenario(scenario.id);
+            const zones = await fetchZones();
+            onScenariosApplied(zones);
         } catch (e) {
             console.error("Failed to apply scenario:", e);
         } finally {

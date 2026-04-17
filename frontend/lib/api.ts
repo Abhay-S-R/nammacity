@@ -1,4 +1,12 @@
-import type { Zone, ForecastResponse, AgentAnalysis, DispatchResult } from "./types";
+import type {
+  Zone,
+  ZonesApiResponse,
+  ForecastResponse,
+  AgentAnalysis,
+  DispatchResult,
+  ReportSubmitResponse,
+  ScenariosResponse,
+} from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -20,8 +28,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 
 // ─── Zones ────────────────────────────────────────────────────────────────────
 
+/** Fetch all zones with scores + backend-computed summary stats */
+export async function fetchZonesWithSummary(): Promise<ZonesApiResponse> {
+  return get<ZonesApiResponse>("/api/zones");
+}
+
+/** Convenience: just the zone list */
 export async function fetchZones(): Promise<Zone[]> {
-  const data = await get<{ zones: Zone[] }>("/api/zones");
+  const data = await fetchZonesWithSummary();
   return data.zones;
 }
 
@@ -37,30 +51,49 @@ export async function fetchForecast(offsetHours: number): Promise<ForecastRespon
 
 // ─── What-If ──────────────────────────────────────────────────────────────────
 
-export async function applyScenario(scenarioId: string | null): Promise<{ zones: Zone[] }> {
+export async function fetchScenarios(): Promise<ScenariosResponse> {
+  return get<ScenariosResponse>("/api/scenarios");
+}
+
+export async function applyScenario(scenarioId: string | null): Promise<{ message: string }> {
   return post("/api/whatif", { scenario_id: scenarioId });
 }
 
 // ─── Agent ────────────────────────────────────────────────────────────────────
 
-export async function analyzeZone(zoneId: string): Promise<AgentAnalysis> {
-  return post("/api/agent/analyze", { zone_id: zoneId });
+export async function analyzeZone(zoneId: string, query?: string): Promise<AgentAnalysis> {
+  return post("/api/agent/analyze", { zone_id: zoneId, query });
 }
 
 export async function dispatchAlert(
   zoneId: string,
-  severity: "low" | "medium" | "high" | "critical",
-  message: string
+  severity: string,
+  message?: string,
+  stationId?: string
 ): Promise<DispatchResult> {
-  return post("/api/agent/dispatch", { zone_id: zoneId, severity, message });
+  return post("/api/agent/dispatch", {
+    zone_id: zoneId,
+    severity,
+    message,
+    station_id: stationId,
+  });
+}
+
+export async function fetchAlerts(): Promise<{ alerts: unknown[]; total: number }> {
+  return get("/api/agent/alerts");
 }
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 
 export async function submitReport(report: {
   category: string;
-  zone_id: string;
-  description: string;
-}): Promise<{ id: string }> {
+  location: [number, number];
+  zone_id?: string;
+  description?: string;
+}): Promise<ReportSubmitResponse> {
   return post("/api/reports", report);
+}
+
+export async function fetchReports(): Promise<{ reports: unknown[]; total: number }> {
+  return get("/api/reports");
 }
